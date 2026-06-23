@@ -118,9 +118,19 @@ with st.expander("Developer Debug Info"):
     st.write("Difficulty:", difficulty)
     st.write("History:", st.session_state.history)
 
+guess_key = f"guess_input_{difficulty}"
+if guess_key not in st.session_state:
+    st.session_state[guess_key] = ""
+if "reset_guess_input" not in st.session_state:
+    st.session_state.reset_guess_input = False
+
+if st.session_state.reset_guess_input:
+    st.session_state[guess_key] = ""
+    st.session_state.reset_guess_input = False
+
 raw_guess = st.text_input(
     "Enter your guess:",
-    key=f"guess_input_{difficulty}"
+    key=guess_key
 )
 
 col1, col2, col3 = st.columns(3)
@@ -132,8 +142,12 @@ with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
 if new_game:
-    st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
+    st.session_state.attempts = 1
+    st.session_state.secret = random.randint(low, high)
+    st.session_state.score = 0
+    st.session_state.status = "playing"
+    st.session_state.history = []
+    st.session_state.reset_guess_input = True
     st.success("New game started.")
     st.rerun()
 
@@ -150,10 +164,10 @@ if submit:
     ok, guess_int, err = parse_guess(raw_guess)
 
     if not ok:
-        st.session_state.history.append(raw_guess)
+        st.session_state.history = st.session_state.history + [raw_guess]
         st.error(err)
     else:
-        st.session_state.history.append(guess_int)
+        st.session_state.history = st.session_state.history + [guess_int]
 
         if st.session_state.attempts % 2 == 0:
             secret = str(st.session_state.secret)
